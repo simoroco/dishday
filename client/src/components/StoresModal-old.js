@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './StoresModal.css';
-import ImageUpload from './ImageUpload';
 
 function StoresModal({ onClose }) {
   const [stores, setStores] = useState([]);
@@ -9,8 +8,7 @@ function StoresModal({ onClose }) {
   const [formData, setFormData] = useState({
     name: '',
     photo: '',
-    mapsUrl: '',
-    notes: ''
+    mapsUrl: ''
   });
 
   useEffect(() => {
@@ -34,15 +32,14 @@ function StoresModal({ onClose }) {
     setFormData({
       name: store.name || '',
       photo: store.photo || '',
-      mapsUrl: store.mapsUrl || '',
-      notes: store.notes || ''
+      mapsUrl: store.mapsUrl || ''
     });
     setShowForm(true);
   };
 
   const handleAddNew = () => {
     setEditingStore(null);
-    setFormData({ name: '', photo: '', mapsUrl: '', notes: '' });
+    setFormData({ name: '', photo: '', mapsUrl: '' });
     setShowForm(true);
   };
 
@@ -54,14 +51,6 @@ function StoresModal({ onClose }) {
     };
     setFormData(newFormData);
     
-    if (editingStore) {
-      saveStore(editingStore.id, newFormData);
-    }
-  };
-
-  const handleImageChange = (path) => {
-    const newFormData = { ...formData, photo: path };
-    setFormData(newFormData);
     if (editingStore) {
       saveStore(editingStore.id, newFormData);
     }
@@ -91,7 +80,7 @@ function StoresModal({ onClose }) {
         });
         fetchStores();
         setShowForm(false);
-        setFormData({ name: '', photo: '', mapsUrl: '', notes: '' });
+        setFormData({ name: '', photo: '', mapsUrl: '' });
       } catch (error) {
         console.error('Error creating store:', error);
       }
@@ -101,7 +90,7 @@ function StoresModal({ onClose }) {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this store?')) {
+    if (window.confirm('Supprimer ce magasin ?')) {
       try {
         await fetch(`/api/stores/${id}`, { method: 'DELETE' });
         fetchStores();
@@ -116,7 +105,7 @@ function StoresModal({ onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Manage Stores</h2>
+          <h2>Gérer les magasins</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         
@@ -136,59 +125,56 @@ function StoresModal({ onClose }) {
                     <div className="store-info">
                       <div className="store-name">{store.name}</div>
                       {store.mapsUrl && (
-                        <div className="store-maps">📍 Google Maps link</div>
+                        <div className="store-maps">📍 Lien Google Maps</div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
               <button className="button" onClick={handleAddNew}>
-                + Add Store
+                + Ajouter un magasin
               </button>
             </>
           ) : (
             <form onSubmit={handleSubmit}>
-              <ImageUpload 
-                currentImage={formData.photo}
-                onImageChange={handleImageChange}
-              />
-
               <div className="form-group">
+                <label>Nom *</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Store name *"
                   required
                   autoFocus
                 />
               </div>
 
               <div className="form-group">
+                <label>Photo (URL)</label>
+                <input
+                  type="url"
+                  name="photo"
+                  value={formData.photo}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Lien Google Maps</label>
                 <input
                   type="url"
                   name="mapsUrl"
                   value={formData.mapsUrl}
                   onChange={handleChange}
-                  placeholder="Google Maps URL"
-                />
-              </div>
-
-              <div className="form-group">
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  placeholder="Notes (optional)"
-                  rows="3"
+                  placeholder="https://maps.google.com/..."
                 />
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 {!editingStore && (
                   <button type="submit" className="button">
-                    Create
+                    Créer
                   </button>
                 )}
                 {editingStore && (
@@ -197,7 +183,7 @@ function StoresModal({ onClose }) {
                     className="button button-danger"
                     onClick={() => handleDelete(editingStore.id)}
                   >
-                    Delete
+                    Supprimer
                   </button>
                 )}
                 <button
@@ -205,7 +191,7 @@ function StoresModal({ onClose }) {
                   className="button button-secondary"
                   onClick={() => setShowForm(false)}
                 >
-                  Back
+                  Retour
                 </button>
               </div>
             </form>

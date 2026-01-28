@@ -35,6 +35,34 @@
   border-color: #4a9eff;
 }
 
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.settings-button {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: #333;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.settings-button:hover {
+  background-color: #444;
+}
+
 .add-button {
   width: 100%;
   padding: 0.875rem;

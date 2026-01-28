@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ShoppingTab.css';
 import ProductModal from './ProductModal';
-import StoresModal from './StoresModal';
-import ToggleButton from './ToggleButton';
 
 function ShoppingTab() {
   const [products, setProducts] = useState([]);
@@ -12,7 +10,6 @@ function ShoppingTab() {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [showStoresModal, setShowStoresModal] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -20,10 +17,7 @@ function ShoppingTab() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProducts();
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchProducts();
   }, [searchTerm, filterStore, filterStatus]);
 
   const fetchProducts = async () => {
@@ -77,57 +71,36 @@ function ShoppingTab() {
         <input
           type="text"
           className="search-input"
-          placeholder="Search products..."
+          placeholder="Rechercher un produit..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         
-        <div className="filter-buttons">
-          <ToggleButton
-            active={filterStore === ''}
-            onClick={() => setFilterStore('')}
-            small
+        <div className="filters">
+          <select
+            className="filter-select"
+            value={filterStore}
+            onChange={(e) => setFilterStore(e.target.value)}
           >
-            All Stores
-          </ToggleButton>
-          {stores.map(store => (
-            <ToggleButton
-              key={store.id}
-              active={filterStore === store.id.toString()}
-              onClick={() => setFilterStore(store.id.toString())}
-              small
-            >
-              {store.name}
-            </ToggleButton>
-          ))}
-        </div>
+            <option value="">Tous les magasins</option>
+            {stores.map(store => (
+              <option key={store.id} value={store.id}>{store.name}</option>
+            ))}
+          </select>
 
-        <div className="filter-buttons">
-          <ToggleButton
-            active={filterStatus === ''}
-            onClick={() => setFilterStatus('')}
-            small
+          <select
+            className="filter-select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
           >
-            All Status
-          </ToggleButton>
-          <ToggleButton
-            active={filterStatus === 'true'}
-            onClick={() => setFilterStatus('true')}
-            small
-          >
-            ✓ In Stock
-          </ToggleButton>
-          <ToggleButton
-            active={filterStatus === 'false'}
-            onClick={() => setFilterStatus('false')}
-            small
-          >
-            ✗ To Buy
-          </ToggleButton>
+            <option value="">Tous les statuts</option>
+            <option value="true">En stock</option>
+            <option value="false">À acheter</option>
+          </select>
         </div>
 
         <button className="add-button" onClick={handleAddNew}>
-          + Add Product
+          + Ajouter un produit
         </button>
       </div>
 
@@ -135,8 +108,8 @@ function ShoppingTab() {
         {products.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">🛒</div>
-            <div className="empty-state-text">No products found</div>
-            <div className="empty-state-subtext">Add your first product</div>
+            <div className="empty-state-text">Aucun produit trouvé</div>
+            <div className="empty-state-subtext">Ajoutez votre premier produit</div>
           </div>
         ) : (
           <div className="products-grid">
@@ -160,7 +133,7 @@ function ShoppingTab() {
                     <div className="product-store">📍 {product.store.name}</div>
                   )}
                   <div className={`product-status ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
-                    {product.inStock ? '✓ In stock' : '✗ To buy'}
+                    {product.inStock ? '✓ En stock' : '✗ À acheter'}
                   </div>
                 </div>
               </div>
@@ -169,20 +142,12 @@ function ShoppingTab() {
         )}
       </div>
 
-      <button className="settings-button" onClick={() => setShowStoresModal(true)}>
-        ⚙️ Manage Stores
-      </button>
-
       {showModal && (
         <ProductModal
           product={selectedProduct}
           stores={stores}
           onClose={handleCloseModal}
         />
-      )}
-
-      {showStoresModal && (
-        <StoresModal onClose={() => setShowStoresModal(false)} />
       )}
     </div>
   );

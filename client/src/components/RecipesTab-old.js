@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './RecipesTab.css';
 import RecipeModal from './RecipeModal';
-import ToggleButton from './ToggleButton';
 
 function RecipesTab() {
   const [recipes, setRecipes] = useState([]);
@@ -17,10 +16,7 @@ function RecipesTab() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchRecipes();
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchRecipes();
   }, [searchTerm, filterMealType]);
 
   const fetchRecipes = async () => {
@@ -69,9 +65,9 @@ function RecipesTab() {
 
   const getMealTypeLabel = (type) => {
     const labels = {
-      breakfast: 'Breakfast',
-      lunch: 'Lunch',
-      dinner: 'Dinner'
+      breakfast: 'Petit déjeuner',
+      lunch: 'Déjeuner',
+      dinner: 'Dîner'
     };
     return labels[type] || type;
   };
@@ -91,44 +87,24 @@ function RecipesTab() {
         <input
           type="text"
           className="search-input"
-          placeholder="Search recipes..."
+          placeholder="Rechercher une recette..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         
-        <div className="filter-buttons">
-          <ToggleButton
-            active={filterMealType === ''}
-            onClick={() => setFilterMealType('')}
-            small
-          >
-            All
-          </ToggleButton>
-          <ToggleButton
-            active={filterMealType === 'breakfast'}
-            onClick={() => setFilterMealType('breakfast')}
-            small
-          >
-            🌅 Breakfast
-          </ToggleButton>
-          <ToggleButton
-            active={filterMealType === 'lunch'}
-            onClick={() => setFilterMealType('lunch')}
-            small
-          >
-            ☀️ Lunch
-          </ToggleButton>
-          <ToggleButton
-            active={filterMealType === 'dinner'}
-            onClick={() => setFilterMealType('dinner')}
-            small
-          >
-            🌙 Dinner
-          </ToggleButton>
-        </div>
+        <select
+          className="filter-select"
+          value={filterMealType}
+          onChange={(e) => setFilterMealType(e.target.value)}
+        >
+          <option value="">Tous les repas</option>
+          <option value="breakfast">Petit déjeuner</option>
+          <option value="lunch">Déjeuner</option>
+          <option value="dinner">Dîner</option>
+        </select>
 
         <button className="add-button" onClick={handleAddNew}>
-          + Add Recipe
+          + Ajouter une recette
         </button>
       </div>
 
@@ -136,8 +112,8 @@ function RecipesTab() {
         {recipes.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📖</div>
-            <div className="empty-state-text">No recipes found</div>
-            <div className="empty-state-subtext">Add your first recipe</div>
+            <div className="empty-state-text">Aucune recette trouvée</div>
+            <div className="empty-state-subtext">Ajoutez votre première recette</div>
           </div>
         ) : (
           <div className="recipes-grid">
@@ -167,7 +143,7 @@ function RecipesTab() {
                   </div>
                   {recipe.ingredients && recipe.ingredients.length > 0 && (
                     <div className="recipe-ingredients-count">
-                      {recipe.ingredients.length} ingredient{recipe.ingredients.length > 1 ? 's' : ''}
+                      {recipe.ingredients.length} ingrédient{recipe.ingredients.length > 1 ? 's' : ''}
                     </div>
                   )}
                 </div>

@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './RecipeModal.css';
-import ImageUpload from './ImageUpload';
-import ToggleButton from './ToggleButton';
-
-const UNITS = ['kg', 'g', 'L', 'ml', 'units', 'pcs'];
 
 function RecipeModal({ recipe, products, onClose }) {
   const [formData, setFormData] = useState({
@@ -12,8 +8,7 @@ function RecipeModal({ recipe, products, onClose }) {
     prepTime: '',
     cookTime: '',
     mealType: 'lunch',
-    ingredients: [],
-    notes: ''
+    ingredients: []
   });
 
   useEffect(() => {
@@ -28,8 +23,7 @@ function RecipeModal({ recipe, products, onClose }) {
           productId: ing.productId,
           quantity: ing.quantity || '',
           unit: ing.unit || ''
-        })) || [],
-        notes: recipe.notes || ''
+        })) || []
       });
     }
   }, [recipe]);
@@ -42,22 +36,6 @@ function RecipeModal({ recipe, products, onClose }) {
     };
     setFormData(newFormData);
     
-    if (recipe) {
-      saveRecipe(newFormData);
-    }
-  };
-
-  const handleImageChange = (path) => {
-    const newFormData = { ...formData, photo: path };
-    setFormData(newFormData);
-    if (recipe) {
-      saveRecipe(newFormData);
-    }
-  };
-
-  const handleMealTypeChange = (mealType) => {
-    const newFormData = { ...formData, mealType };
-    setFormData(newFormData);
     if (recipe) {
       saveRecipe(newFormData);
     }
@@ -129,7 +107,7 @@ function RecipeModal({ recipe, products, onClose }) {
   };
 
   const handleDelete = async () => {
-    if (recipe && window.confirm('Delete this recipe?')) {
+    if (recipe && window.confirm('Supprimer cette recette ?')) {
       try {
         await fetch(`/api/recipes/${recipe.id}`, { method: 'DELETE' });
         onClose();
@@ -143,78 +121,74 @@ function RecipeModal({ recipe, products, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{recipe ? 'Edit Recipe' : 'New Recipe'}</h2>
+          <h2>{recipe ? 'Modifier la recette' : 'Nouvelle recette'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         
         <form className="modal-body" onSubmit={handleSubmit}>
-          <ImageUpload 
-            currentImage={formData.photo}
-            onImageChange={handleImageChange}
-          />
-
           <div className="form-group">
+            <label>Nom *</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Recipe name *"
               required
               autoFocus
             />
           </div>
 
           <div className="form-group">
+            <label>Photo (URL)</label>
+            <input
+              type="url"
+              name="photo"
+              value={formData.photo}
+              onChange={handleChange}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Temps de préparation (minutes) *</label>
             <input
               type="number"
               name="prepTime"
               value={formData.prepTime}
               onChange={handleChange}
-              placeholder="Prep time (minutes) *"
               required
               min="0"
             />
           </div>
 
           <div className="form-group">
+            <label>Temps de cuisson (minutes) *</label>
             <input
               type="number"
               name="cookTime"
               value={formData.cookTime}
               onChange={handleChange}
-              placeholder="Cook time (minutes) *"
               required
               min="0"
             />
           </div>
 
           <div className="form-group">
-            <label className="field-label">Meal Type</label>
-            <div className="toggle-button-group">
-              <ToggleButton
-                active={formData.mealType === 'breakfast'}
-                onClick={() => handleMealTypeChange('breakfast')}
-              >
-                🌅 Breakfast
-              </ToggleButton>
-              <ToggleButton
-                active={formData.mealType === 'lunch'}
-                onClick={() => handleMealTypeChange('lunch')}
-              >
-                ☀️ Lunch
-              </ToggleButton>
-              <ToggleButton
-                active={formData.mealType === 'dinner'}
-                onClick={() => handleMealTypeChange('dinner')}
-              >
-                🌙 Dinner
-              </ToggleButton>
-            </div>
+            <label>Type de repas *</label>
+            <select
+              name="mealType"
+              value={formData.mealType}
+              onChange={handleChange}
+              required
+            >
+              <option value="breakfast">Petit déjeuner</option>
+              <option value="lunch">Déjeuner</option>
+              <option value="dinner">Dîner</option>
+            </select>
           </div>
 
           <div className="form-group">
-            <label className="field-label">Ingredients</label>
+            <label>Ingrédients</label>
             <div className="ingredients-editor">
               {formData.ingredients.map((ingredient, index) => (
                 <div key={index} className="ingredient-row">
@@ -223,7 +197,7 @@ function RecipeModal({ recipe, products, onClose }) {
                     onChange={(e) => handleIngredientChange(index, 'productId', e.target.value)}
                     className="ingredient-select"
                   >
-                    <option value="">Select product</option>
+                    <option value="">Sélectionner un produit</option>
                     {products.map(product => (
                       <option key={product.id} value={product.id}>{product.name}</option>
                     ))}
@@ -232,20 +206,17 @@ function RecipeModal({ recipe, products, onClose }) {
                     type="number"
                     value={ingredient.quantity}
                     onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
-                    placeholder="Qty"
+                    placeholder="Qté"
                     className="ingredient-quantity-input"
                     step="0.01"
                   />
-                  <select
+                  <input
+                    type="text"
                     value={ingredient.unit}
                     onChange={(e) => handleIngredientChange(index, 'unit', e.target.value)}
-                    className="ingredient-unit-select"
-                  >
-                    <option value="">Unit</option>
-                    {UNITS.map(unit => (
-                      <option key={unit} value={unit}>{unit}</option>
-                    ))}
-                  </select>
+                    placeholder="Unité"
+                    className="ingredient-unit-input"
+                  />
                   <button
                     type="button"
                     onClick={() => removeIngredient(index)}
@@ -260,24 +231,14 @@ function RecipeModal({ recipe, products, onClose }) {
                 onClick={addIngredient}
                 className="button button-secondary button-small"
               >
-                + Add Ingredient
+                + Ajouter un ingrédient
               </button>
             </div>
           </div>
 
-          <div className="form-group">
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              placeholder="Notes (optional)"
-              rows="3"
-            />
-          </div>
-
           {!recipe && (
             <button type="submit" className="button">
-              Create Recipe
+              Créer la recette
             </button>
           )}
 
@@ -287,7 +248,7 @@ function RecipeModal({ recipe, products, onClose }) {
               className="button button-danger"
               onClick={handleDelete}
             >
-              Delete
+              Supprimer
             </button>
           )}
         </form>

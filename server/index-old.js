@@ -1,37 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer');
-const sharp = require('sharp');
-const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const IMAGES_DIR = path.join(__dirname, 'data/images');
-if (!fs.existsSync(IMAGES_DIR)) {
-  fs.mkdirSync(IMAGES_DIR, { recursive: true });
-}
-
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, GIF and WebP are allowed.'));
-    }
-  }
-});
-
 app.use(cors());
 app.use(express.json());
-app.use('/images', express.static(IMAGES_DIR));
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
@@ -39,27 +16,6 @@ if (process.env.NODE_ENV === 'production') {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
-});
-
-app.post('/api/upload', upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-    const filepath = path.join(IMAGES_DIR, filename);
-
-    await sharp(req.file.buffer)
-      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality: 85 })
-      .toFile(filepath);
-
-    res.json({ path: `/images/${filename}` });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 app.get('/api/stores', async (req, res) => {
@@ -90,9 +46,9 @@ app.get('/api/stores/:id', async (req, res) => {
 
 app.post('/api/stores', async (req, res) => {
   try {
-    const { name, photo, mapsUrl, notes } = req.body;
+    const { name, photo, mapsUrl } = req.body;
     const store = await prisma.store.create({
-      data: { name, photo, mapsUrl, notes }
+      data: { name, photo, mapsUrl }
     });
     res.status(201).json(store);
   } catch (error) {
@@ -102,10 +58,10 @@ app.post('/api/stores', async (req, res) => {
 
 app.put('/api/stores/:id', async (req, res) => {
   try {
-    const { name, photo, mapsUrl, notes } = req.body;
+    const { name, photo, mapsUrl } = req.body;
     const store = await prisma.store.update({
       where: { id: parseInt(req.params.id) },
-      data: { name, photo, mapsUrl, notes }
+      data: { name, photo, mapsUrl }
     });
     res.json(store);
   } catch (error) {
@@ -166,7 +122,7 @@ app.get('/api/products/:id', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
   try {
-    const { name, photo, quantity, unit, storeId, inStock, notes } = req.body;
+    const { name, photo, quantity, unit, storeId, inStock } = req.body;
     const product = await prisma.product.create({
       data: {
         name,
@@ -174,8 +130,7 @@ app.post('/api/products', async (req, res) => {
         quantity: quantity ? parseFloat(quantity) : null,
         unit,
         storeId: storeId ? parseInt(storeId) : null,
-        inStock: inStock || false,
-        notes
+        inStock: inStock || false
       },
       include: { store: true }
     });
@@ -187,7 +142,7 @@ app.post('/api/products', async (req, res) => {
 
 app.put('/api/products/:id', async (req, res) => {
   try {
-    const { name, photo, quantity, unit, storeId, inStock, notes } = req.body;
+    const { name, photo, quantity, unit, storeId, inStock } = req.body;
     const product = await prisma.product.update({
       where: { id: parseInt(req.params.id) },
       data: {
@@ -196,8 +151,7 @@ app.put('/api/products/:id', async (req, res) => {
         quantity: quantity ? parseFloat(quantity) : null,
         unit,
         storeId: storeId ? parseInt(storeId) : null,
-        inStock,
-        notes
+        inStock
       },
       include: { store: true }
     });
@@ -265,7 +219,7 @@ app.get('/api/recipes/:id', async (req, res) => {
 
 app.post('/api/recipes', async (req, res) => {
   try {
-    const { name, photo, prepTime, cookTime, mealType, ingredients, notes } = req.body;
+    const { name, photo, prepTime, cookTime, mealType, ingredients } = req.body;
     const recipe = await prisma.recipe.create({
       data: {
         name,
@@ -273,7 +227,6 @@ app.post('/api/recipes', async (req, res) => {
         prepTime: parseInt(prepTime),
         cookTime: parseInt(cookTime),
         mealType,
-        notes,
         ingredients: {
           create: ingredients?.map(ing => ({
             productId: ing.productId,
@@ -296,7 +249,7 @@ app.post('/api/recipes', async (req, res) => {
 
 app.put('/api/recipes/:id', async (req, res) => {
   try {
-    const { name, photo, prepTime, cookTime, mealType, ingredients, notes } = req.body;
+    const { name, photo, prepTime, cookTime, mealType, ingredients } = req.body;
     
     await prisma.recipeIngredient.deleteMany({
       where: { recipeId: parseInt(req.params.id) }
@@ -310,7 +263,6 @@ app.put('/api/recipes/:id', async (req, res) => {
         prepTime: parseInt(prepTime),
         cookTime: parseInt(cookTime),
         mealType,
-        notes,
         ingredients: {
           create: ingredients?.map(ing => ({
             productId: ing.productId,
@@ -347,22 +299,13 @@ app.get('/api/meal-suggestion', async (req, res) => {
     const hour = new Date().getHours();
     let mealType;
     
-    if (hour >= 4 && hour < 11) {
+    if (hour >= 6 && hour < 11) {
       mealType = 'breakfast';
-    } else if (hour >= 11 && hour < 18) {
+    } else if (hour >= 11 && hour < 17) {
       mealType = 'lunch';
     } else {
       mealType = 'dinner';
     }
-
-    const shoppingList = await prisma.shoppingListItem.findMany({
-      include: {
-        product: true
-      }
-    });
-    const productsToAvoid = shoppingList
-      .filter(item => !item.product.inStock)
-      .map(item => item.productId);
 
     const recentHistory = await prisma.mealHistory.findMany({
       where: {
@@ -375,9 +318,10 @@ app.get('/api/meal-suggestion', async (req, res) => {
 
     const excludeIds = recentHistory.map(h => h.recipeId);
 
-    const allRecipes = await prisma.recipe.findMany({
+    const recipes = await prisma.recipe.findMany({
       where: {
-        mealType
+        mealType,
+        id: { notIn: excludeIds }
       },
       include: {
         ingredients: {
@@ -386,32 +330,36 @@ app.get('/api/meal-suggestion', async (req, res) => {
       }
     });
 
-    const availableRecipes = allRecipes.filter(recipe => {
-      const hasUnavailableIngredients = recipe.ingredients.some(ing => 
-        productsToAvoid.includes(ing.productId)
-      );
-      return !hasUnavailableIngredients && !excludeIds.includes(recipe.id);
-    });
-
-    let selectedRecipe;
-    if (availableRecipes.length > 0) {
-      selectedRecipe = availableRecipes[Math.floor(Math.random() * availableRecipes.length)];
-    } else {
-      const fallbackRecipes = allRecipes.filter(recipe => !excludeIds.includes(recipe.id));
-      if (fallbackRecipes.length > 0) {
-        selectedRecipe = fallbackRecipes[Math.floor(Math.random() * fallbackRecipes.length)];
-      } else if (allRecipes.length > 0) {
-        selectedRecipe = allRecipes[Math.floor(Math.random() * allRecipes.length)];
-      } else {
+    if (recipes.length === 0) {
+      const allRecipes = await prisma.recipe.findMany({
+        where: { mealType },
+        include: {
+          ingredients: {
+            include: { product: true }
+          }
+        }
+      });
+      
+      if (allRecipes.length === 0) {
         return res.status(404).json({ error: 'No recipes found for this meal type' });
       }
+      
+      const randomRecipe = allRecipes[Math.floor(Math.random() * allRecipes.length)];
+      
+      await prisma.mealHistory.create({
+        data: { recipeId: randomRecipe.id }
+      });
+      
+      return res.json(randomRecipe);
     }
 
+    const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+    
     await prisma.mealHistory.create({
-      data: { recipeId: selectedRecipe.id }
+      data: { recipeId: randomRecipe.id }
     });
 
-    res.json(selectedRecipe);
+    res.json(randomRecipe);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

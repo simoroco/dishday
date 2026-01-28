@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ImageUpload from './ImageUpload';
-import ToggleButton from './ToggleButton';
-
-const UNITS = ['kg', 'g', 'L', 'ml', 'units', 'pcs'];
 
 function ProductModal({ product, stores, onClose }) {
   const [formData, setFormData] = useState({
@@ -11,8 +7,7 @@ function ProductModal({ product, stores, onClose }) {
     quantity: '',
     unit: '',
     storeId: '',
-    inStock: false,
-    notes: ''
+    inStock: false
   });
 
   useEffect(() => {
@@ -23,36 +18,19 @@ function ProductModal({ product, stores, onClose }) {
         quantity: product.quantity || '',
         unit: product.unit || '',
         storeId: product.storeId || '',
-        inStock: product.inStock || false,
-        notes: product.notes || ''
+        inStock: product.inStock || false
       });
     }
   }, [product]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     const newFormData = {
       ...formData,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     };
     setFormData(newFormData);
     
-    if (product) {
-      saveProduct(newFormData);
-    }
-  };
-
-  const handleImageChange = (path) => {
-    const newFormData = { ...formData, photo: path };
-    setFormData(newFormData);
-    if (product) {
-      saveProduct(newFormData);
-    }
-  };
-
-  const handleToggle = (field, value) => {
-    const newFormData = { ...formData, [field]: value };
-    setFormData(newFormData);
     if (product) {
       saveProduct(newFormData);
     }
@@ -82,7 +60,7 @@ function ProductModal({ product, stores, onClose }) {
   };
 
   const handleDelete = async () => {
-    if (product && window.confirm('Delete this product?')) {
+    if (product && window.confirm('Supprimer ce produit ?')) {
       try {
         await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
         onClose();
@@ -96,109 +74,86 @@ function ProductModal({ product, stores, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{product ? 'Edit Product' : 'New Product'}</h2>
+          <h2>{product ? 'Modifier le produit' : 'Nouveau produit'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         
         <form className="modal-body" onSubmit={handleSubmit}>
-          <ImageUpload 
-            currentImage={formData.photo}
-            onImageChange={handleImageChange}
-          />
-
           <div className="form-group">
+            <label>Nom *</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Product name *"
               required
               autoFocus
             />
           </div>
 
           <div className="form-group">
+            <label>Photo (URL)</label>
+            <input
+              type="url"
+              name="photo"
+              value={formData.photo}
+              onChange={handleChange}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Quantité</label>
             <input
               type="number"
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
-              placeholder="Quantity"
               step="0.01"
             />
           </div>
 
           <div className="form-group">
-            <label className="field-label">Unit</label>
-            <div className="toggle-button-group">
-              {UNITS.map(unit => (
-                <ToggleButton
-                  key={unit}
-                  active={formData.unit === unit}
-                  onClick={() => handleToggle('unit', unit)}
-                  small
-                >
-                  {unit}
-                </ToggleButton>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="field-label">Store</label>
-            <div className="toggle-button-group">
-              <ToggleButton
-                active={!formData.storeId}
-                onClick={() => handleToggle('storeId', '')}
-                small
-              >
-                None
-              </ToggleButton>
-              {stores.map(store => (
-                <ToggleButton
-                  key={store.id}
-                  active={formData.storeId === store.id}
-                  onClick={() => handleToggle('storeId', store.id)}
-                  small
-                >
-                  {store.name}
-                </ToggleButton>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="field-label">Status</label>
-            <div className="toggle-button-group">
-              <ToggleButton
-                active={formData.inStock}
-                onClick={() => handleToggle('inStock', true)}
-              >
-                ✓ In Stock
-              </ToggleButton>
-              <ToggleButton
-                active={!formData.inStock}
-                onClick={() => handleToggle('inStock', false)}
-              >
-                ✗ To Buy
-              </ToggleButton>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <textarea
-              name="notes"
-              value={formData.notes}
+            <label>Unité</label>
+            <input
+              type="text"
+              name="unit"
+              value={formData.unit}
               onChange={handleChange}
-              placeholder="Notes (optional)"
-              rows="3"
+              placeholder="kg, L, unités..."
             />
+          </div>
+
+          <div className="form-group">
+            <label>Magasin</label>
+            <select
+              name="storeId"
+              value={formData.storeId}
+              onChange={handleChange}
+            >
+              <option value="">Aucun</option>
+              {stores.map(store => (
+                <option key={store.id} value={store.id}>{store.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                name="inStock"
+                checked={formData.inStock}
+                onChange={handleChange}
+                style={{ width: 'auto' }}
+              />
+              En stock
+            </label>
           </div>
 
           {!product && (
             <button type="submit" className="button">
-              Create Product
+              Créer le produit
             </button>
           )}
 
@@ -208,7 +163,7 @@ function ProductModal({ product, stores, onClose }) {
               className="button button-danger"
               onClick={handleDelete}
             >
-              Delete
+              Supprimer
             </button>
           )}
         </form>

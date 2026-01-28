@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './MealsTab.css';
-import StoresModal from './StoresModal';
+import RecipeModal from './RecipeModal';
 
 function MealsTab() {
   const [suggestion, setSuggestion] = useState(null);
@@ -9,10 +9,14 @@ function MealsTab() {
   const [searchResults, setSearchResults] = useState([]);
   const [shoppingList, setShoppingList] = useState([]);
   const [recentItems, setRecentItems] = useState([]);
-  const [showStoresModal, setShowStoresModal] = useState(false);
+  const [showRecipeModal, setShowRecipeModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [clickTimer, setClickTimer] = useState(null);
 
   useEffect(() => {
-    fetchSuggestion();
+    fetchSuggestion(true);
     fetchShoppingList();
     fetchRecentItems();
   }, []);
@@ -25,13 +29,21 @@ function MealsTab() {
     }
   }, [searchTerm]);
 
-  const fetchSuggestion = async () => {
+  const fetchSuggestion = async (withAnimation = false) => {
     setLoading(true);
+    if (withAnimation) {
+      setIsAnimating(true);
+    }
+    
     try {
       const response = await fetch('/api/meal-suggestion');
       if (response.ok) {
         const data = await response.json();
         setSuggestion(data);
+        
+        if (withAnimation) {
+          setTimeout(() => setIsAnimating(false), 600);
+        }
       }
     } catch (error) {
       console.error('Error fetching suggestion:', error);
@@ -108,62 +120,86 @@ function MealsTab() {
 
   const getMealTypeLabel = () => {
     const hour = new Date().getHours();
-    if (hour >= 6 && hour < 11) return 'Petit déjeuner';
-    if (hour >= 11 && hour < 17) return 'Déjeuner';
-    return 'Dîner';
+    if (hour >= 4 && hour < 11) return 'Breakfast';
+    if (hour >= 11 && hour < 18) return 'Lunch';
+    return 'Dinner';
   };
 
   const isInShoppingList = (productId) => {
     return shoppingList.some(item => item.productId === productId);
   };
 
+  const handleRecipePhotoClick = () => {
+    setClickCount(prev => prev + 1);
+    
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+    }
+
+    const timer = setTimeout(() => {
+      if (clickCount + 1 === 2) {
+        fetchSuggestion(true);
+      } else {
+        setSelectedRecipe(suggestion);
+        setShowRecipeModal(true);
+      }
+      setClickCount(0);
+    }, 300);
+
+    setClickTimer(timer);
+  };
+
+  const filteredSearchResults = searchResults.filter(product => {
+    const inList = isInShoppingList(product.id);
+    const inRecent = recentItems.some(item => item.productId === product.id);
+    return !inList && !inRecent;
+  });
+
+  const searchInShoppingList = shoppingList.filter(item =>
+    item.product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const searchInRecent = recentItems.filter(item =>
+    item.product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    !isInShoppingList(item.productId)
+  );
+
   return (
     <div className="meals-tab">
       <div className="suggestion-section">
-        {loading ? (
-          <div className="loading">Chargement...</div>
+        {loading && !suggestion ? (
+          <div className="loading">Loading...</div>
         ) : suggestion ? (
-          <div className="suggestion-card">
+          <div className={`suggestion-card ${isAnimating ? 'flip-animation' : ''}`}>
             <div className="suggestion-label">{getMealTypeLabel()}</div>
             <h2 className="suggestion-title">{suggestion.name}</h2>
             {suggestion.photo && (
-              <img src={suggestion.photo} alt={suggestion.name} className="suggestion-image" />
+              <img 
+                src={suggestion.photo} 
+                alt={suggestion.name} 
+                className="suggestion-image"
+                onClick={handleRecipePhotoClick}
+              />
             )}
             <div className="suggestion-info">
               <div className="info-item">
                 <span className="info-icon">⏱️</span>
-                <span>{suggestion.prepTime} min préparation</span>
+                <span>{suggestion.prepTime} min prep</span>
               </div>
               <div className="info-item">
                 <span className="info-icon">🔥</span>
-                <span>{suggestion.cookTime} min cuisson</span>
+                <span>{suggestion.cookTime} min cook</span>
               </div>
             </div>
-            {suggestion.ingredients && suggestion.ingredients.length > 0 && (
-              <div className="ingredients-list">
-                <h3>Ingrédients</h3>
-                {suggestion.ingredients.map(ing => (
-                  <div key={ing.id} className="ingredient-item">
-                    <span className="ingredient-name">{ing.product.name}</span>
-                    <span className="ingredient-quantity">
-                      {ing.quantity} {ing.unit}
-                    </span>
-                    <span className={`ingredient-status ${ing.product.inStock ? 'in-stock' : 'out-of-stock'}`}>
-                      {ing.product.inStock ? '✓' : '✗'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button className="refresh-button" onClick={fetchSuggestion}>
-              🔄 Nouvelle proposition
+            <button hidden className="refresh-button" onClick={() => fetchSuggestion(true)}>
+              🔄 New Suggestion
             </button>
           </div>
         ) : (
           <div className="empty-state">
             <div className="empty-state-icon">🍽️</div>
-            <div className="empty-state-text">Aucune recette disponible</div>
-            <div className="empty-state-subtext">Ajoutez des recettes pour commencer</div>
+            <div className="empty-state-text">No recipes available</div>
+            <div className="empty-state-subtext">Add recipes to get started</div>
           </div>
         )}
       </div>
@@ -171,15 +207,15 @@ function MealsTab() {
       <div className="bottom-section">
         <div className="search-section">
           <input
-            type="text"
+            type="text" id="meals-search-input"
             className="search-input"
-            placeholder="Rechercher un produit..."
+            placeholder="Add shopping items..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          {searchResults.length > 0 && (
+          {searchTerm && (filteredSearchResults.length > 0 || searchInShoppingList.length > 0 || searchInRecent.length > 0) && (
             <div className="search-results">
-              {searchResults.map(product => (
+              {filteredSearchResults.map(product => (
                 <div
                   key={product.id}
                   className="search-result-item"
@@ -197,73 +233,94 @@ function MealsTab() {
                   <span className="add-icon">+</span>
                 </div>
               ))}
+              {searchInShoppingList.map(item => (
+                <div
+                  key={item.id}
+                  className="search-result-item in-list"
+                  onClick={() => removeFromShoppingList(item.productId)}
+                >
+                  {item.product.photo && (
+                    <img src={item.product.photo} alt={item.product.name} className="result-image" />
+                  )}
+                  <div className="result-info">
+                    <div className="result-name">{item.product.name}</div>
+                    <div className="result-store">In shopping list</div>
+                  </div>
+                  <span className="remove-icon">✓</span>
+                </div>
+              ))}
+              {searchInRecent.map(item => (
+                <div
+                  key={item.id}
+                  className="search-result-item"
+                  onClick={() => addToShoppingList(item.productId)}
+                >
+                  {item.product.photo && (
+                    <img src={item.product.photo} alt={item.product.name} className="result-image" />
+                  )}
+                  <div className="result-info">
+                    <div className="result-name">{item.product.name}</div>
+                    <div className="result-store">Recent</div>
+                  </div>
+                  <span className="add-icon">+</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        <div className="lists-section">
+        <div className="product-grids">
           {shoppingList.length > 0 && (
-            <div className="list-group">
-              <h3 className="list-title">Liste de courses</h3>
-              <div className="list-items">
-                {shoppingList.map(item => (
-                  <div
-                    key={item.id}
-                    className="list-item selected"
-                    onClick={() => removeFromShoppingList(item.productId)}
-                  >
-                    {item.product.photo && (
-                      <img src={item.product.photo} alt={item.product.name} className="item-image" />
-                    )}
-                    <div className="item-info">
-                      <div className="item-name">{item.product.name}</div>
-                      {item.product.store && (
-                        <div className="item-store">{item.product.store.name}</div>
-                      )}
-                    </div>
-                    <span className="remove-icon">✓</span>
-                  </div>
-                ))}
-              </div>
+            <div className="product-grid">
+              {shoppingList.map(item => (
+                <div
+                  key={item.id}
+                  className="product-grid-item"
+                  onClick={() => removeFromShoppingList(item.productId)}
+                >
+                  {item.product.photo ? (
+                    <img src={item.product.photo} alt={item.product.name} />
+                  ) : (
+                    <div className="no-image">📦</div>
+                  )}
+                  <div className="product-grid-badge">✓</div>
+                </div>
+              ))}
             </div>
           )}
 
           {recentItems.length > 0 && (
-            <div className="list-group">
-              <h3 className="list-title">Produits récents</h3>
-              <div className="list-items">
-                {recentItems
-                  .filter(item => !isInShoppingList(item.productId))
-                  .map(item => (
-                    <div
-                      key={item.id}
-                      className="list-item"
-                      onClick={() => addToShoppingList(item.productId)}
-                    >
-                      {item.product.photo && (
-                        <img src={item.product.photo} alt={item.product.name} className="item-image" />
-                      )}
-                      <div className="item-info">
-                        <div className="item-name">{item.product.name}</div>
-                        {item.product.store && (
-                          <div className="item-store">{item.product.store.name}</div>
-                        )}
-                      </div>
-                      <span className="add-icon">+</span>
-                    </div>
-                  ))}
-              </div>
+            <div className="product-grid">
+              {recentItems
+                .filter(item => !isInShoppingList(item.productId))
+                .map(item => (
+                  <div
+                    key={item.id}
+                    className="product-grid-item"
+                    onClick={() => addToShoppingList(item.productId)}
+                  >
+                    {item.product.photo ? (
+                      <img src={item.product.photo} alt={item.product.name} />
+                    ) : (
+                      <div className="no-image">📦</div>
+                    )}
+                  </div>
+                ))}
             </div>
           )}
         </div>
-
-        <button className="settings-button" onClick={() => setShowStoresModal(true)}>
-          ⚙️ Gérer les magasins
-        </button>
       </div>
 
-      {showStoresModal && (
-        <StoresModal onClose={() => setShowStoresModal(false)} />
+      {showRecipeModal && selectedRecipe && (
+        <RecipeModal
+          recipe={selectedRecipe}
+          products={[]}
+          onClose={() => {
+            setShowRecipeModal(false);
+            setSelectedRecipe(null);
+            fetchSuggestion();
+          }}
+        />
       )}
     </div>
   );

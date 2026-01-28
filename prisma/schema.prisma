@@ -8,42 +8,45 @@ datasource db {
 }
 
 model Store {
-  id       Int       @id @default(autoincrement())
-  name     String
-  photo    String?
-  mapsUrl  String?
-  products Product[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String
+  photo     String?
+  mapsUrl   String?
+  notes     String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id          Int                 @id @default(autoincrement())
-  name        String
-  photo       String?
-  quantity    Float?
-  unit        String?
-  storeId     Int?
-  store       Store?              @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  inStock     Boolean             @default(false)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  ingredients RecipeIngredient[]
+  id                Int                  @id @default(autoincrement())
+  name              String
+  photo             String?
+  quantity          Float?
+  unit              String?
+  storeId           Int?
+  store             Store?               @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  inStock           Boolean              @default(false)
+  notes             String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  ingredients       RecipeIngredient[]
   shoppingListItems ShoppingListItem[]
-  recentItems RecentItem[]
+  recentItems       RecentItem[]
 }
 
 model Recipe {
-  id              Int                 @id @default(autoincrement())
-  name            String
-  photo           String?
-  prepTime        Int
-  cookTime        Int
-  mealType        String
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  ingredients     RecipeIngredient[]
-  mealHistory     MealHistory[]
+  id          Int                  @id @default(autoincrement())
+  name        String
+  photo       String?
+  prepTime    Int
+  cookTime    Int
+  mealType    String
+  notes       String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  ingredients RecipeIngredient[]
+  mealHistory MealHistory[]
 }
 
 model RecipeIngredient {
@@ -78,8 +81,8 @@ model RecentItem {
 }
 
 model MealHistory {
-  id          Int      @id @default(autoincrement())
-  recipeId    Int
-  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  proposedAt  DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  recipeId   Int
+  recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  proposedAt DateTime @default(now())
 }

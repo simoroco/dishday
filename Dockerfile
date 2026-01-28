@@ -23,7 +23,7 @@ RUN npm run build
 
 WORKDIR /app
 
-RUN mkdir -p /app/server/data/photos
+RUN mkdir -p /app/server/data/images
 
 ENV NODE_ENV=production
 ENV PORT=5000
