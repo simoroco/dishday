@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id       Int       @id @default(autoincrement())
+  name     String
+  photo    String?
+  mapsUrl  String?
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  photo       String?
+  quantity    Float?
+  unit        String?
+  storeId     Int?
+  store       Store?              @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  inStock     Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  ingredients RecipeIngredient[]
+  shoppingListItems ShoppingListItem[]
+  recentItems RecentItem[]
+}
+
+model Recipe {
+  id              Int                 @id @default(autoincrement())
+  name            String
+  photo           String?
+  prepTime        Int
+  cookTime        Int
+  mealType        String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  ingredients     RecipeIngredient[]
+  mealHistory     MealHistory[]
+}
+
+model RecipeIngredient {
+  id        Int      @id @default(autoincrement())
+  recipeId  Int
+  productId Int
+  quantity  Float?
+  unit      String?
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([recipeId, productId])
+}
+
+model ShoppingListItem {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  @@unique([productId])
+}
+
+model RecentItem {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lastUsed  DateTime @default(now())
+
+  @@unique([productId])
+}
+
+model MealHistory {
+  id          Int      @id @default(autoincrement())
+  recipeId    Int
+  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  proposedAt  DateTime @default(now())
+}

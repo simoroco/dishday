@@ -1,0 +1,26 @@
+{
+  "name": "dishday",
+  "version": "1.0.0",
+  "description": "Meal planning application with shopping list management",
+  "main": "server/index.js",
+  "scripts": {
+    "install-all": "npm install && cd client && npm install",
+    "server": "node server/index.js",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "npm run dev",
+    "seed": "node server/seed.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "keywords": ["meal", "planning", "recipes", "shopping"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "@prisma/client": "^5.7.1",
+    "prisma": "^5.7.1",
+    "concurrently": "^8.2.2"
+  }
+}
