@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './MealsTab.css';
 import RecipeModal from './RecipeModal';
+import ProductModal from './ProductModal';
 
 function MealsTab() {
   const [suggestion, setSuggestion] = useState(null);
@@ -11,6 +12,8 @@ function MealsTab() {
   const [recentItems, setRecentItems] = useState([]);
   const [showRecipeModal, setShowRecipeModal] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [stores, setStores] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [clickTimer, setClickTimer] = useState(null);
@@ -19,6 +22,7 @@ function MealsTab() {
     fetchSuggestion(true);
     fetchShoppingList();
     fetchRecentItems();
+    fetchStores();
   }, []);
 
   useEffect(() => {
@@ -85,6 +89,24 @@ function MealsTab() {
       }
     } catch (error) {
       console.error('Error fetching recent items:', error);
+    }
+  };
+
+  const fetchStores = async () => {
+    try {
+      const response = await fetch('/api/stores');
+      if (response.ok) {
+        const data = await response.json();
+        setStores(data);
+      }
+    } catch (error) {
+      console.error('Error fetching stores:', error);
+    }
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter' && searchTerm.trim() && searchResults.length === 0) {
+      setShowProductModal(true);
     }
   };
 
@@ -172,7 +194,7 @@ function MealsTab() {
         ) : suggestion ? (
           <div className={`suggestion-card ${isAnimating ? 'flip-animation' : ''}`}>
             <div className="suggestion-label">{getMealTypeLabel()}</div>
-            <h2 className="suggestion-title">{suggestion.name}</h2>
+            <h2 className="suggestion-title" onClick={handleRecipePhotoClick}>{suggestion.name}</h2>
             {suggestion.photo && (
               <img 
                 src={suggestion.photo} 
@@ -191,9 +213,6 @@ function MealsTab() {
                 <span>{suggestion.cookTime} min cook</span>
               </div>
             </div>
-            <button hidden className="refresh-button" onClick={() => fetchSuggestion(true)}>
-              🔄 New Suggestion
-            </button>
           </div>
         ) : (
           <div className="empty-state">
@@ -212,6 +231,7 @@ function MealsTab() {
             placeholder="Add shopping items..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={handleSearchKeyPress}
           />
           {searchTerm && (filteredSearchResults.length > 0 || searchInShoppingList.length > 0 || searchInRecent.length > 0) && (
             <div className="search-results">
@@ -269,43 +289,52 @@ function MealsTab() {
           )}
         </div>
 
-        <div className="product-grids">
+        <div className="product-sections">
           {shoppingList.length > 0 && (
-            <div className="product-grid">
-              {shoppingList.map(item => (
-                <div
-                  key={item.id}
-                  className="product-grid-item"
-                  onClick={() => removeFromShoppingList(item.productId)}
-                >
-                  {item.product.photo ? (
-                    <img src={item.product.photo} alt={item.product.name} />
-                  ) : (
-                    <div className="no-image">📦</div>
-                  )}
-                  <div className="product-grid-badge">✓</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {recentItems.length > 0 && (
-            <div className="product-grid">
-              {recentItems
-                .filter(item => !isInShoppingList(item.productId))
-                .map(item => (
+            <div className="product-section">
+              <h3 className="section-title">Shopping List</h3>
+              <div className="product-grid-small">
+                {shoppingList.map(item => (
                   <div
                     key={item.id}
-                    className="product-grid-item"
-                    onClick={() => addToShoppingList(item.productId)}
+                    className="product-grid-item-small"
+                    onClick={() => removeFromShoppingList(item.productId)}
                   >
                     {item.product.photo ? (
                       <img src={item.product.photo} alt={item.product.name} />
                     ) : (
                       <div className="no-image">📦</div>
                     )}
+                    <div className="product-name-small">{item.product.name}</div>
+                    <div className="product-grid-badge">✓</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {recentItems.length > 0 && (
+            <div className="product-section">
+              <h3 className="section-title">Recent Items</h3>
+              <div className="product-grid-small">
+                {recentItems
+                  .filter(item => !isInShoppingList(item.productId))
+                  .slice(0, 10)
+                  .map(item => (
+                    <div
+                      key={item.id}
+                      className="product-grid-item-small"
+                      onClick={() => addToShoppingList(item.productId)}
+                    >
+                      {item.product.photo ? (
+                        <img src={item.product.photo} alt={item.product.name} />
+                      ) : (
+                        <div className="no-image">📦</div>
+                      )}
+                      <div className="product-name-small">{item.product.name}</div>
+                    </div>
+                  ))}
+              </div>
             </div>
           )}
         </div>
@@ -319,6 +348,19 @@ function MealsTab() {
             setShowRecipeModal(false);
             setSelectedRecipe(null);
             fetchSuggestion();
+          }}
+        />
+      )}
+
+      {showProductModal && (
+        <ProductModal
+          product={null}
+          stores={stores}
+          onClose={() => {
+            setShowProductModal(false);
+            setSearchTerm('');
+            fetchShoppingList();
+            fetchRecentItems();
           }}
         />
       )}

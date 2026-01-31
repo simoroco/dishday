@@ -28,7 +28,7 @@ function App() {
         <h1>DishDay</h1>
       </header>
 
-      <nav className="tab-nav">
+      <nav className="tab-nav" hidden id="header-tab-nav">
         {tabs.map(tab => (
           <button
             key={tab.id}

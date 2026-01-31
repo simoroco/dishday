@@ -3,6 +3,69 @@
   flex-direction: column;
   height: 100%;
   background-color: #1a1a1a;
+  position: relative;
+}
+
+.floating-buttons {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  z-index: 100;
+}
+
+.floating-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background-color: #4a9eff;
+  color: #fff;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.4);
+  transition: all 0.2s;
+}
+
+.floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(74, 158, 255, 0.6);
+}
+
+.floating-btn.add-btn {
+  background-color: #22c55e;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.floating-btn.add-btn:hover {
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.6);
+}
+
+.close-search-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.close-search-btn:hover {
+  background-color: #444;
 }
 
 .shopping-header {
@@ -107,10 +170,53 @@
   box-shadow: 0 8px 16px rgba(74, 158, 255, 0.2);
 }
 
+.product-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
 .product-image {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
+  border-radius: 12px 12px 0 0;
+}
+
+.product-store-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.store-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.product-to-buy-band {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ef4444;
+  color: #fff;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .product-content {

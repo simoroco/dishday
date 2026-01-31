@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Modal from './Modal';
 import './RecipeModal.css';
 import ImageUpload from './ImageUpload';
 import ToggleButton from './ToggleButton';
@@ -140,8 +141,8 @@ function RecipeModal({ recipe, products, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose}>
+      <div className="recipe-modal">
         <div className="modal-header">
           <h2>{recipe ? 'Edit Recipe' : 'New Recipe'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
@@ -292,7 +293,7 @@ function RecipeModal({ recipe, products, onClose }) {
           )}
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
 

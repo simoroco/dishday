@@ -31,4 +31,4 @@ ENV DATABASE_URL=file:/app/server/data/dishday.db
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node server/seed.js 2>/dev/null || true && node server/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node server/seed.js && node server/index.js"]

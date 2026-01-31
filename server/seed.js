@@ -2,6 +2,16 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log('🌱 Checking if seed is needed...');
+
+  // Check if database already has data
+  const storeCount = await prisma.store.count();
+  
+  if (storeCount > 0) {
+    console.log('✅ Database already seeded, skipping...');
+    return;
+  }
+
   console.log('🌱 Starting seed...');
 
   await prisma.mealHistory.deleteMany();

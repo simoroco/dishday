@@ -99,43 +99,62 @@ function ShoppingTab() {
 
       {showSearch && (
         <div className="shopping-header">
-          <button className="close-search-btn" onClick={() => setShowSearch(false)}>
-            ✕
-          </button>
-          
           <input
             type="text"
             className="search-input"
             placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            autoFocus
-          />
-          
-          <div className="filter-buttons">
-            {stores.map(store => (
-              <ToggleButton
-                key={store.id}
-                active={filterStore.includes(store.id.toString())}
-                onClick={() => toggleStore(store.id.toString())}
-                small
-              >
-                {store.name}
-              </ToggleButton>
-            ))}
-          </div>
-
-          <div className="filter-buttons">
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        
+        <div className="filter-buttons">
+          <ToggleButton
+            active={filterStore === ''}
+            onClick={() => setFilterStore('')}
+            small
+          >
+            All Stores
+          </ToggleButton>
+          {stores.map(store => (
             <ToggleButton
-              active={filterStatus === 'false'}
-              onClick={() => setFilterStatus('false')}
+              key={store.id}
+              active={filterStore === store.id.toString()}
+              onClick={() => setFilterStore(store.id.toString())}
               small
             >
-              ✗ To Buy
+              {store.name}
             </ToggleButton>
-          </div>
+          ))}
         </div>
-      )}
+
+        <div className="filter-buttons">
+          <ToggleButton
+            active={filterStatus === ''}
+            onClick={() => setFilterStatus('')}
+            small
+          >
+            All Status
+          </ToggleButton>
+          <ToggleButton
+            active={filterStatus === 'true'}
+            onClick={() => setFilterStatus('true')}
+            small
+          >
+            ✓ In Stock
+          </ToggleButton>
+          <ToggleButton
+            active={filterStatus === 'false'}
+            onClick={() => setFilterStatus('false')}
+            small
+          >
+            ✗ To Buy
+          </ToggleButton>
+        </div>
+
+        <button className="add-button" onClick={handleAddNew}>
+          + Add Product
+        </button>
+      </div>
 
       <div className="products-list">
         {products.length === 0 ? (
@@ -152,30 +171,22 @@ function ShoppingTab() {
                 className="product-card"
                 onClick={() => handleProductClick(product)}
               >
-                <div className="product-image-container">
-                  {product.photo && (
-                    <img src={product.photo} alt={product.name} className="product-image" />
-                  )}
-                  {product.store && (
-                    <div className="product-store-badge">
-                      {product.store.photo ? (
-                        <img src={product.store.photo} alt={product.store.name} className="store-logo" />
-                      ) : (
-                        <span>📍</span>
-                      )}
-                    </div>
-                  )}
-                  {!product.inStock && (
-                    <div className="product-to-buy-band">To Buy</div>
-                  )}
-                </div>
+                {product.photo && (
+                  <img src={product.photo} alt={product.name} className="product-image" />
+                )}
                 <div className="product-content">
                   <h3 className="product-name">{product.name}</h3>
-                  {product.inStock && product.quantity && (
+                  {product.quantity && (
                     <div className="product-quantity">
                       {product.quantity} {product.unit}
                     </div>
                   )}
+                  {product.store && (
+                    <div className="product-store">📍 {product.store.name}</div>
+                  )}
+                  <div className={`product-status ${product.inStock ? 'in-stock' : 'out-of-stock'}`}>
+                    {product.inStock ? '✓ In stock' : '✗ To buy'}
+                  </div>
                 </div>
               </div>
             ))}

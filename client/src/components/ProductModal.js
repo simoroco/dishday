@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Modal from './Modal';
 import ImageUpload from './ImageUpload';
 import ToggleButton from './ToggleButton';
 
@@ -10,7 +11,7 @@ function ProductModal({ product, stores, onClose }) {
     photo: '',
     quantity: '',
     unit: '',
-    storeId: '',
+    storeId: [],
     inStock: false,
     notes: ''
   });
@@ -22,7 +23,7 @@ function ProductModal({ product, stores, onClose }) {
         photo: product.photo || '',
         quantity: product.quantity || '',
         unit: product.unit || '',
-        storeId: product.storeId || '',
+        storeId: product.storeId ? [product.storeId] : [],
         inStock: product.inStock || false,
         notes: product.notes || ''
       });
@@ -92,9 +93,21 @@ function ProductModal({ product, stores, onClose }) {
     }
   };
 
+  const toggleStoreSelection = (storeId) => {
+    const newStoreIds = formData.storeId.includes(storeId)
+      ? formData.storeId.filter(id => id !== storeId)
+      : [...formData.storeId, storeId];
+    
+    const newFormData = { ...formData, storeId: newStoreIds };
+    setFormData(newFormData);
+    if (product) {
+      saveProduct(newFormData);
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose}>
+      <div className="product-modal">
         <div className="modal-header">
           <h2>{product ? 'Edit Product' : 'New Product'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
@@ -146,20 +159,13 @@ function ProductModal({ product, stores, onClose }) {
           </div>
 
           <div className="form-group">
-            <label className="field-label">Store</label>
+            <label className="field-label">Stores</label>
             <div className="toggle-button-group">
-              <ToggleButton
-                active={!formData.storeId}
-                onClick={() => handleToggle('storeId', '')}
-                small
-              >
-                None
-              </ToggleButton>
               {stores.map(store => (
                 <ToggleButton
                   key={store.id}
-                  active={formData.storeId === store.id}
-                  onClick={() => handleToggle('storeId', store.id)}
+                  active={formData.storeId.includes(store.id)}
+                  onClick={() => toggleStoreSelection(store.id)}
                   small
                 >
                   {store.name}
@@ -213,7 +219,7 @@ function ProductModal({ product, stores, onClose }) {
           )}
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
 

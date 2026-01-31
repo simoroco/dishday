@@ -7,10 +7,9 @@ function RecipesTab() {
   const [recipes, setRecipes] = useState([]);
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterMealType, setFilterMealType] = useState([]);
+  const [filterMealType, setFilterMealType] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     fetchRecipes();
@@ -28,9 +27,7 @@ function RecipesTab() {
     try {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
-      if (filterMealType.length > 0) {
-        filterMealType.forEach(type => params.append('mealType', type));
-      }
+      if (filterMealType) params.append('mealType', filterMealType);
 
       const response = await fetch(`/api/recipes?${params}`);
       if (response.ok) {
@@ -88,67 +85,52 @@ function RecipesTab() {
     return emojis[type] || '🍽️';
   };
 
-  const toggleMealType = (type) => {
-    setFilterMealType(prev => {
-      if (prev.includes(type)) {
-        return prev.filter(t => t !== type);
-      } else {
-        return [...prev, type];
-      }
-    });
-  };
-
   return (
     <div className="recipes-tab">
-      <div className="floating-buttons">
-        <button className="floating-btn search-btn" onClick={() => setShowSearch(!showSearch)}>
-          🔍
-        </button>
-        <button className="floating-btn add-btn" onClick={handleAddNew}>
-          +
+      <div className="recipes-header">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search recipes..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        
+        <div className="filter-buttons">
+          <ToggleButton
+            active={filterMealType === ''}
+            onClick={() => setFilterMealType('')}
+            small
+          >
+            All
+          </ToggleButton>
+          <ToggleButton
+            active={filterMealType === 'breakfast'}
+            onClick={() => setFilterMealType('breakfast')}
+            small
+          >
+            🌅 Breakfast
+          </ToggleButton>
+          <ToggleButton
+            active={filterMealType === 'lunch'}
+            onClick={() => setFilterMealType('lunch')}
+            small
+          >
+            ☀️ Lunch
+          </ToggleButton>
+          <ToggleButton
+            active={filterMealType === 'dinner'}
+            onClick={() => setFilterMealType('dinner')}
+            small
+          >
+            🌙 Dinner
+          </ToggleButton>
+        </div>
+
+        <button className="add-button" onClick={handleAddNew}>
+          + Add Recipe
         </button>
       </div>
-
-      {showSearch && (
-        <div className="recipes-header">
-          <button className="close-search-btn" onClick={() => setShowSearch(false)}>
-            ✕
-          </button>
-          
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search recipes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            autoFocus
-          />
-          
-          <div className="filter-buttons">
-            <ToggleButton
-              active={filterMealType.includes('breakfast')}
-              onClick={() => toggleMealType('breakfast')}
-              small
-            >
-              🌅 Breakfast
-            </ToggleButton>
-            <ToggleButton
-              active={filterMealType.includes('lunch')}
-              onClick={() => toggleMealType('lunch')}
-              small
-            >
-              ☀️ Lunch
-            </ToggleButton>
-            <ToggleButton
-              active={filterMealType.includes('dinner')}
-              onClick={() => toggleMealType('dinner')}
-              small
-            >
-              🌙 Dinner
-            </ToggleButton>
-          </div>
-        </div>
-      )}
 
       <div className="recipes-list">
         {recipes.length === 0 ? (
